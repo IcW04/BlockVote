@@ -13,7 +13,7 @@ interface Candidate {
 
 const Voting: React.FC = () => {
   const { contract } = useContract();
-  const { account, isConnected } = useWallet();
+  const { account, isConnected, connectWallet, registerWithAdmin } = useWallet();
   const { ensureUserHasTokens, isTransferringTokens } = useVotingTokens();
   
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -27,13 +27,67 @@ const Voting: React.FC = () => {
   });
   const [userBalance, setUserBalance] = useState<string>('0');
   const [loading, setLoading] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [registrationLoading, setRegistrationLoading] = useState(false);
 
   useEffect(() => {
     if (contract && isConnected && account) {
       loadElectionData();
       checkUserStatus();
+      checkRegistrationStatus();
     }
   }, [contract, isConnected, account]);
+
+  const checkRegistrationStatus = async () => {
+    if (!contract || !account) return;
+    
+    try {
+      const registeredVoters = await contract.obtenerVotantesRegistrados();
+      const registered = registeredVoters.includes(account);
+      setIsRegistered(registered);
+    } catch (error) {
+      console.error('Error checking registration:', error);
+      setIsRegistered(false);
+    }
+  };
+
+  const handleAutoRegistration = async () => {
+    if (!contract || !account || isRegistered) return;
+
+    const userConfirmed = window.confirm(
+      "🤝 Welcome to the Voting System!\n\n" +
+      "To participate in voting, we need to register your wallet address with the admin.\n\n" +
+      "This will:\n" +
+      "✅ Add your wallet to the voter list\n" +
+      "✅ Allow you to receive voting tokens\n" +
+      "✅ Enable you to participate in elections\n\n" +
+      "Do you agree to share your wallet address with the admin?"
+    );
+
+    if (!userConfirmed) {
+      alert("❌ Registration cancelled. You need to register to participate in voting.");
+      return;
+    }
+
+    setRegistrationLoading(true);
+    try {
+      console.log('🔄 Auto-registering user...');
+      await registerWithAdmin(contract);
+      
+      await checkRegistrationStatus();
+      await checkUserStatus();
+      
+      alert("🎉 Successfully registered! The admin can now send you voting tokens.");
+      
+    } catch (error: any) {
+      console.error('❌ Auto-registration failed:', error);
+      alert("⚠️ Registration completed, but you may need to wait for the admin to distribute tokens.");
+      // Don't show this as an error since the user is likely registered
+      await checkRegistrationStatus();
+    } finally {
+      setRegistrationLoading(false);
+    }
+  };
 
   const loadElectionData = async () => {
     if (!contract) return;
@@ -200,16 +254,151 @@ const Voting: React.FC = () => {
       setIsVoting(false);
     }
   };
-
   if (!isConnected) {
     return (
       <div className="container">
         <div className="row justify-content-center">
-          <div className="col-md-6">
-            <Card title="🗳️ Sistema de Votación Blockchain">
+          <div className="col-md-8">
+            <Card title="🗳️ Blockchain Voting System">
               <div className="text-center">
-                <p className="mb-3">Conecta tu wallet para participar en la votación</p>
-                <p className="text-muted">Necesitas MetaMask para votar</p>
+                <i className="bi bi-wallet2 fs-1 text-primary mb-4"></i>
+                <h4 className="mb-3">Connect Your Wallet to Vote</h4>
+                <p className="mb-4 text-muted">
+                  Connect your MetaMask wallet to participate in elections. 
+                  Your wallet address will be automatically registered with the admin to receive voting tokens.
+                </p>
+                
+                <div className="d-grid gap-2 col-md-6 mx-auto">
+                  <Button 
+                    variant="primary" 
+                    size="lg"
+                    onClick={async () => {
+                      try {
+                        await connectWallet();
+                      } catch (error) {
+                        console.error('Failed to connect wallet:', error);
+                        alert('Failed to connect wallet. Please make sure MetaMask is installed and try again.');
+                      }
+                    }}
+                  >
+                    <i className="bi bi-wallet2 me-2"></i>
+                    Connect MetaMask Wallet
+                  </Button>
+                </div>
+
+                <div className="alert alert-info mt-4" role="alert">
+                  <i className="bi bi-info-circle me-2"></i>
+                  <strong>What happens when you connect:</strong>
+                  <ol className="text-start mt-2 mb-0">
+                    <li>Your wallet connects to the voting system</li>
+                    <li>You'll be asked to register your address with the admin</li>
+                    <li>Admin can then send you voting tokens</li>
+                    <li>You can participate in active elections</li>
+                  </ol>
+                </div>
+
+                <div className="mt-4">
+                  <small className="text-muted">
+                    Don't have MetaMask? 
+                    <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="ms-1">
+                      Download it here
+                    </a>
+                  </small>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show registration prompt for connected but unregistered users
+  if (isConnected && !isRegistered && !registrationLoading) {
+    return (
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-8">
+            <Card title="🤝 Complete Your Registration">
+              <div className="text-center">
+                <i className="bi bi-person-check fs-1 text-success mb-4"></i>
+                <h4 className="mb-3">Welcome to the Voting System!</h4>
+                <p className="mb-4">
+                  Your wallet is connected, but you need to register with the admin to receive voting tokens.
+                </p>
+
+                <div className="alert alert-primary" role="alert">
+                  <div className="d-flex align-items-center">
+                    <i className="bi bi-wallet2 fs-5 me-3"></i>
+                    <div className="text-start">
+                      <strong>Connected Wallet:</strong><br/>
+                      <code>{account}</code>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <h6>Registration Benefits:</h6>
+                  <div className="row text-start">
+                    <div className="col-md-6">
+                      <ul className="list-unstyled">
+                        <li><i className="bi bi-check-circle text-success me-2"></i>Receive voting tokens from admin</li>
+                        <li><i className="bi bi-check-circle text-success me-2"></i>Participate in all elections</li>
+                      </ul>
+                    </div>
+                    <div className="col-md-6">
+                      <ul className="list-unstyled">
+                        <li><i className="bi bi-check-circle text-success me-2"></i>Transparent voting history</li>
+                        <li><i className="bi bi-check-circle text-success me-2"></i>Secure blockchain voting</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="d-grid gap-2 col-md-6 mx-auto">
+                  <Button 
+                    variant="success" 
+                    size="lg"
+                    onClick={handleAutoRegistration}
+                  >
+                    <i className="bi bi-person-plus me-2"></i>
+                    Register & Get Voting Access
+                  </Button>
+                </div>
+
+                <div className="alert alert-info mt-4" role="alert">
+                  <i className="bi bi-shield-check me-2"></i>
+                  Your wallet address will be securely shared with the admin to enable token distribution. 
+                  This is required to participate in voting.
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen during registration
+  if (registrationLoading) {
+    return (
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <Card title="🔄 Registering Your Wallet">
+              <div className="text-center">
+                <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <h5>Please wait...</h5>
+                <p className="text-muted">
+                  We're registering your wallet address with the admin system. 
+                  This may take a few moments.
+                </p>
+                <div className="alert alert-warning" role="alert">
+                  <i className="bi bi-exclamation-triangle me-2"></i>
+                  Please don't close this window or navigate away during registration.
+                </div>
               </div>
             </Card>
           </div>
@@ -254,9 +443,83 @@ const Voting: React.FC = () => {
                 </p>
               </div>
             </div>
-          </Card>
+          </Card>        </div>
+      </div>      {/* Token Status and Guidance - Simplified */}
+      {parseFloat(userBalance) === 0 && isRegistered && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <Card title="🪙 Waiting for Voting Tokens">
+              <div className="alert alert-info" role="alert">
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-clock fs-4 me-3"></i>
+                  <div>
+                    <h6 className="alert-heading mb-1">You're Registered!</h6>
+                    <p className="mb-0">Your wallet is registered. Wait for the admin to distribute voting tokens before elections.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="text-center p-3 border rounded">
+                    <i className="bi bi-check-circle fs-2 text-success mb-2"></i>
+                    <h6>✅ Wallet Registered</h6>
+                    <small className="text-muted">Your address: {account?.substring(0, 8)}...{account?.substring(account.length - 6)}</small>
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <div className="text-center p-3 border rounded">
+                    <i className="bi bi-hourglass-split fs-2 text-warning mb-2"></i>
+                    <h6>⏳ Waiting for Tokens</h6>
+                    <small className="text-muted">Admin will distribute before elections</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="alert alert-success mt-3" role="alert">
+                <i className="bi bi-lightbulb me-2"></i>
+                <strong>What's Next?</strong> The admin will send voting tokens to all registered voters before each election starts. 
+                You'll be able to vote once you receive tokens.
+              </div>
+
+              <div className="text-center">
+                <Button 
+                  variant="outline-primary"
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      await checkUserStatus();
+                      if (parseFloat(userBalance) > 0) {
+                        alert('🎉 Tokens found! You can now vote.');
+                      } else {
+                        alert('ℹ️ No tokens yet. Please wait for admin distribution.');
+                      }
+                    } catch (error) {
+                      console.error(error);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2"></span>
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-arrow-clockwise me-2"></i>
+                      Check for Tokens
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lista de candidatos */}
       {currentElection.isActive && (

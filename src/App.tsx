@@ -24,8 +24,7 @@ function App() {
             >
               <span className="navbar-toggler-icon"></span>
             </button>
-            <div className="collapse navbar-collapse" id="navbarNav">
-              <ul className="navbar-nav ms-auto">
+            <div className="collapse navbar-collapse" id="navbarNav">              <ul className="navbar-nav ms-auto">
                 <li className="nav-item">
                   <Link className="nav-link" to="/">
                     Home
@@ -37,13 +36,13 @@ function App() {
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/admin">
-                    Admin
+                  <Link className="nav-link" to="/blockchain">
+                    Blockchain
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/blockchain">
-                    Blockchain
+                  <Link className="nav-link" to="/admin">
+                    Admin
                   </Link>
                 </li>
               </ul>
@@ -51,13 +50,12 @@ function App() {
           </div>
         </nav>
 
-        {/* Main content */}
-        <main className="container py-4">
+        {/* Main content */}        <main className="container py-4">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/voting" element={<Voting />} />
-            <Route path="/admin" element={<Admin />} />
             <Route path="/blockchain" element={<Blockchain />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>
       </div>

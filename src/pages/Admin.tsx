@@ -6,7 +6,7 @@ import { Card } from '../components/ui/Card';
 import { ethers } from 'ethers';
 
 // Dirección del admin autorizado
-const ADMIN_ADDRESS = '0x991857199BD2aE867AbCf240716493D4ef370426';
+const ADMIN_ADDRESS = '0xca527d55d311C39168677dbDce565edBd4e32D80';
 
 const Admin: React.FC = () => {
   const { contract } = useContract();
@@ -814,9 +814,7 @@ const Admin: React.FC = () => {
             )}
           </Card>
         </div>
-      </div>
-
-      {/* Navigation Tabs */}
+      </div>      {/* Navigation Tabs */}
       <div className="row mb-4">
         <div className="col-12">
           <ul className="nav nav-tabs">
@@ -836,6 +834,15 @@ const Admin: React.FC = () => {
               >
                 <i className="bi bi-people me-2"></i>
                 Candidates
+              </button>
+            </li>
+            <li className="nav-item">
+              <button 
+                className={`nav-link ${activeTab === 'voters' ? 'active' : ''}`}
+                onClick={() => setActiveTab('voters')}
+              >
+                <i className="bi bi-wallet2 me-2"></i>
+                Voters & Tokens
               </button>
             </li>
             {/* ✅ NUEVO: Tab para historial */}
@@ -1048,9 +1055,7 @@ const Admin: React.FC = () => {
                 </Button>
               </form>
             </Card>
-          </div>
-
-          <div className="col-md-6">
+          </div>          <div className="col-md-6">
             <Card title="Current Candidates">
               {candidates.length > 0 ? (
                 <div className="list-group">
@@ -1081,7 +1086,280 @@ const Admin: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Voters & Token Distribution Tab */}
+      {activeTab === 'voters' && (
+        <div className="row">
+          {/* Token Distribution Controls */}
+          <div className="col-12 mb-4">            <Card title="🪙 Token Distribution for Election">
+              <div className="alert alert-info" role="alert">
+                <i className="bi bi-info-circle me-2"></i>
+                <strong>Automatic Registration System:</strong> Users automatically register when they connect their wallets to vote. 
+                Distribute tokens to all registered voters before each election.
+              </div>
+
+              <div className="row mb-4">
+                <div className="col-md-3">
+                  <div className="text-center p-3 border rounded">
+                    <h4 className="text-primary">{registeredVoters.length}</h4>
+                    <small className="text-muted">Registered Voters</small>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-center p-3 border rounded">
+                    <h4 className="text-success">{parseFloat(ownerBalance).toFixed(6)}</h4>
+                    <small className="text-muted">Admin Balance</small>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-center p-3 border rounded">
+                    <h4 className="text-warning">{tokensPerUser}</h4>
+                    <small className="text-muted">Tokens per Voter</small>
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="text-center p-3 border rounded">
+                    <h4 className="text-info">{(registeredVoters.length * parseFloat(tokensPerUser)).toFixed(6)}</h4>
+                    <small className="text-muted">Total Needed</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6">
+                  <h6>Distribute Tokens to All Voters</h6>
+                  <p className="small text-muted">
+                    Send voting tokens to all registered voters at once. Do this before each election.
+                  </p>
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Tokens per voter:</label>
+                    <div className="input-group">
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={tokensPerUser}
+                        onChange={(e) => setTokensPerUser(e.target.value)}
+                        step="0.000001"
+                        min="0"
+                      />
+                      <span className="input-group-text">VOTE</span>
+                    </div>
+                  </div>
+
+                  <div className="d-grid gap-2">
+                    <Button 
+                      variant="success" 
+                      onClick={handleBulkMintTokens}
+                      disabled={loading || registeredVoters.length === 0 || parseFloat(ownerBalance) < (registeredVoters.length * parseFloat(tokensPerUser))}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Distributing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-send-fill me-2"></i>
+                          Send Tokens to All Voters ({registeredVoters.length})
+                        </>
+                      )}
+                    </Button>
+
+                    {parseFloat(ownerBalance) < (registeredVoters.length * parseFloat(tokensPerUser)) && (
+                      <small className="text-danger">
+                        <i className="bi bi-exclamation-triangle me-1"></i>
+                        Insufficient admin balance. Need {((registeredVoters.length * parseFloat(tokensPerUser)) - parseFloat(ownerBalance)).toFixed(6)} more tokens.
+                      </small>
+                    )}
+                  </div>
+                </div>
+
+                <div className="col-md-6">
+                  <h6>Send Tokens to Individual Voter</h6>
+                  <p className="small text-muted">
+                    Send tokens to a specific voter address manually.
+                  </p>
+                  
+                  <form onSubmit={handleMintTokens}>
+                    <div className="mb-3">
+                      <label className="form-label">Voter Address:</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="0x..."
+                        value={voterAddress}
+                        onChange={(e) => setVoterAddress(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="d-grid">
+                      <Button 
+                        type="submit" 
+                        variant="primary"
+                        disabled={loading || !voterAddress.trim()}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2"></span>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-send me-2"></i>
+                            Send {tokensPerUser} Tokens
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Registered Voters List */}
+          <div className="col-12">
+            <Card title="👥 Registered Voters">
+              {registeredVoters.length > 0 ? (
+                <>
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="mb-0">Total: {registeredVoters.length} voters</h6>
+                      <Button 
+                        variant="outline-secondary" 
+                        size="sm"
+                        onClick={() => fetchContractData()}
+                        disabled={loading}
+                      >
+                        <i className="bi bi-arrow-clockwise me-1"></i>
+                        Refresh
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>#</th>
+                          <th>Wallet Address</th>
+                          <th>Token Balance</th>
+                          <th>Registration Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {registeredVoters.map((voterAddr, index) => (
+                          <VoterRow 
+                            key={voterAddr} 
+                            index={index + 1}
+                            address={voterAddr}
+                            contract={contract}
+                            onSendTokens={(addr) => {
+                              setVoterAddress(addr);
+                              setActiveTab('voters');
+                            }}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="alert alert-success mt-3" role="alert">
+                    <i className="bi bi-lightbulb me-2"></i>
+                    <strong>Tip:</strong> Before each election, use "Send Tokens to All Voters" to ensure everyone can participate.
+                  </div>
+                </>
+              ) : (                <div className="text-center py-4">
+                  <i className="bi bi-people fs-1 text-muted mb-3"></i>
+                  <h5>No Registered Voters Yet</h5>
+                  <p className="text-muted">
+                    Users will automatically register when they connect their wallets to the voting page. 
+                    Once they connect, they'll appear here for token distribution.
+                  </p>
+                  <div className="alert alert-info" role="alert">
+                    <i className="bi bi-lightbulb me-2"></i>
+                    <strong>How it works:</strong> When users visit the voting page and connect their MetaMask, 
+                    they'll be prompted to register automatically. No manual forms needed!
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+// Helper component for voter rows
+const VoterRow: React.FC<{
+  index: number;
+  address: string;
+  contract: any;
+  onSendTokens: (address: string) => void;
+}> = ({ index, address, contract, onSendTokens }) => {
+  const [balance, setBalance] = useState<string>('0');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBalance();
+  }, [address, contract]);
+
+  const fetchBalance = async () => {
+    if (!contract || !address) return;
+    
+    try {
+      const bal = await contract.balanceOf(address);
+      setBalance(ethers.utils.formatEther(bal));
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      setBalance('Error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const truncateAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  return (
+    <tr>
+      <td>{index}</td>
+      <td>
+        <code className="small">{truncateAddress(address)}</code>
+        <br />
+        <small className="text-muted">{address}</small>
+      </td>
+      <td>
+        {loading ? (
+          <span className="spinner-border spinner-border-sm"></span>
+        ) : (
+          <span className={`badge ${parseFloat(balance) > 0 ? 'bg-success' : 'bg-warning'}`}>
+            {parseFloat(balance).toFixed(6)} VOTE
+          </span>
+        )}
+      </td>
+      <td>
+        <span className="badge bg-info">
+          <i className="bi bi-check-circle me-1"></i>
+          Registered
+        </span>
+      </td>
+      <td>
+        <Button 
+          variant="outline-primary" 
+          size="sm"
+          onClick={() => onSendTokens(address)}
+        >
+          <i className="bi bi-send me-1"></i>
+          Send Tokens
+        </Button>
+      </td>
+    </tr>
   );
 };
 
