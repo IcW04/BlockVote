@@ -22,51 +22,74 @@ export const useVotingTokens = () => {
       // 1. Verificar balance actual
       const currentBalance = await contract.balanceOf(account);
       const balanceFormatted = ethers.utils.formatEther(currentBalance);
-      console.log('💰 Balance actual:', balanceFormatted);
+      const costoVoto = await contract.COSTO_VOTO();
+      const costoVotoFormatted = ethers.utils.formatEther(costoVoto);
       
-      // Si ya tiene tokens, no necesita más
-      if (parseFloat(balanceFormatted) > 0) {
+      console.log('💰 Balance actual:', balanceFormatted);
+      console.log('💸 Costo del voto:', costoVotoFormatted);
+      
+      // Si ya tiene tokens suficientes para votar, no necesita más
+      if (currentBalance.gte(costoVoto)) {
         console.log('✅ Usuario ya tiene tokens suficientes para votar');
         return true;
       }
       
-      // 2. Verificar si puede recibir tokens
-      const canReceiveTokens = await contract.puedeRecibirTokens(account);
-      console.log('✅ Puede recibir tokens:', canReceiveTokens);
+      console.log('⚠️ Usuario necesita más tokens para votar');
       
-      if (!canReceiveTokens) {
-        console.log('ℹ️ El usuario ya recibió tokens iniciales pero tiene balance 0');
-        return false;
-      }
-      
-      // 3. Verificar si auto-mint está habilitado
+      // 2. Verificar si auto-mint está habilitado
       const autoMintEnabled = await contract.autoMintEnabled();
       console.log('🤖 Auto-transfer habilitado:', autoMintEnabled);
       
       if (!autoMintEnabled) {
         console.log('⚠️ Auto-transfer no está habilitado en el contrato');
-        return false;
+        throw new Error('El sistema de tokens automáticos no está habilitado. Contacta al administrador.');
       }
       
-      // 4. Verificar que el propietario tenga suficientes tokens
+      // 3. Verificar que el propietario tenga suficientes tokens
       const ownerBalance = await contract.balancePropietario();
       const autoMintAmount = await contract.autoMintAmount();
       
+      console.log('🏦 Balance del propietario:', ethers.utils.formatEther(ownerBalance));
+      console.log('🎯 Cantidad a transferir:', ethers.utils.formatEther(autoMintAmount));
+      
       if (ownerBalance.lt(autoMintAmount)) {
         console.log('⚠️ El propietario no tiene suficientes tokens');
-        return false;
+        throw new Error('El sistema no tiene suficientes tokens. Contacta al administrador.');
       }
       
-      // 5. Solicitar tokens automáticamente
+      // 4. Verificar si puede recibir tokens (solo para usuarios completamente nuevos)
+      const canReceiveTokens = await contract.puedeRecibirTokens(account);
+      console.log('✅ Puede recibir tokens (usuario nuevo):', canReceiveTokens);
+      
+      // 5. Intentar solicitar tokens
       console.log('🎯 Solicitando tokens automáticamente para votar...');
       
       try {
-        const gasEstimate = await contract.estimateGas.solicitarTokensIniciales();
-        console.log('⛽ Gas estimado:', gasEstimate.toString());
+        let tx;
         
-        const tx = await contract.solicitarTokensIniciales({
-          gasLimit: gasEstimate.mul(120).div(100) // 20% extra gas
-        });
+        if (canReceiveTokens) {
+          // Usuario completamente nuevo - usar solicitarTokensIniciales
+          console.log('🆕 Usuario nuevo - solicitando tokens iniciales');
+          const gasEstimate = await contract.estimateGas.solicitarTokensIniciales();
+          tx = await contract.solicitarTokensIniciales({
+            gasLimit: gasEstimate.mul(120).div(100)
+          });
+        } else {
+          // Usuario existente que necesita más tokens - intentar transferencia directa
+          console.log('🔄 Usuario existente - solicitando tokens adicionales');
+          
+          // Verificar si existe una función para usuarios que ya gastaron tokens
+          try {
+            const gasEstimate = await contract.estimateGas.solicitarTokensAdicionales();
+            tx = await contract.solicitarTokensAdicionales({
+              gasLimit: gasEstimate.mul(120).div(100)
+            });
+          } catch (methodError) {
+            // Si no existe solicitarTokensAdicionales, usar transferencia directa del admin
+            console.log('ℹ️ Intentando transferencia directa del administrador...');
+            throw new Error('Usuario ya recibió tokens iniciales. El administrador debe transferir tokens manualmente.');
+          }
+        }
         
         console.log('📝 Transacción enviada:', tx.hash);
         
@@ -78,11 +101,12 @@ export const useVotingTokens = () => {
         const newBalanceFormatted = ethers.utils.formatEther(newBalance);
         console.log('💰 Nuevo balance:', newBalanceFormatted);
         
-        if (parseFloat(newBalanceFormatted) > 0) {
+        if (newBalance.gte(costoVoto)) {
           console.log('✅ Tokens recibidos exitosamente para votar');
           return true;
         }
         
+        console.log('⚠️ Balance insuficiente después de la transferencia');
         return false;
         
       } catch (tokenError: any) {
@@ -91,7 +115,8 @@ export const useVotingTokens = () => {
         let errorMessage = 'Error al obtener tokens para votar.';
         if (tokenError.message) {
           if (tokenError.message.includes('Ya has recibido tokens iniciales')) {
-            errorMessage = 'Ya recibiste tokens anteriormente. Contacta al administrador.';
+            // Para usuarios que ya gastaron sus tokens, sugerir contactar admin
+            errorMessage = 'Ya gastaste tus tokens iniciales. El administrador debe proporcionarte más tokens para continuar votando.';
           } else if (tokenError.message.includes('Ya tienes tokens')) {
             errorMessage = 'Ya tienes tokens en tu cuenta.';
           } else if (tokenError.message.includes('Auto-mint no esta habilitado')) {
@@ -99,9 +124,11 @@ export const useVotingTokens = () => {
           } else if (tokenError.message.includes('user rejected transaction')) {
             errorMessage = 'Transacción cancelada por el usuario.';
           } else if (tokenError.message.includes('insufficient funds')) {
-            errorMessage = 'Fondos insuficientes para pagar el gas.';
+            errorMessage = 'Fondos insuficientes para pagar el gas de la transacción.';
           } else if (tokenError.message.includes('Propietario no tiene suficientes tokens')) {
             errorMessage = 'El sistema no tiene suficientes tokens. Contacta al administrador.';
+          } else if (tokenError.message.includes('Usuario ya recibió tokens iniciales')) {
+            errorMessage = 'Ya gastaste tus tokens. El administrador debe darte más tokens para votar.';
           }
         }
         
