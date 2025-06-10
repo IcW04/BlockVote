@@ -13,7 +13,7 @@ This project is a decentralized voting system built on the Ethereum blockchain. 
 
 - **React**: Frontend framework for building user interfaces.
 - **TypeScript**: For type safety and better development experience.
-- **Tailwind CSS**: Utility-first CSS framework for styling.
+- **BootStrap**: Utility-first CSS framework for styling.
 - **Vite**: Build tool for fast development and optimized production builds.
 - **Web3.js**: Library for interacting with the Ethereum blockchain.
 
