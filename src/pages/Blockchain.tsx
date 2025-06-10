@@ -57,7 +57,7 @@ const Blockchain: React.FC = () => {
       console.log('🗳️ Fetching voting transactions...');
 
       // Obtener eventos de votación desde el contrato
-      const filter = contract.filters.VotoCastado();
+      const filter = contract.filters.VotoEmitido();
       const events = await contract.queryFilter(filter, -2000); // Últimos 2000 bloques
 
       const voteData: VoteTransaction[] = [];
@@ -99,7 +99,7 @@ const Blockchain: React.FC = () => {
   const fetchTokenTransactions = async (web3Provider?: ethers.providers.Web3Provider) => {
     if (!contract) return;
 
-    const activeProvider = webProvider || provider;
+    const activeProvider = web3Provider || provider; // Corrected variable name
     if (!activeProvider) return;
 
     try {

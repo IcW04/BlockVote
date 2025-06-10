@@ -95,6 +95,7 @@ const Admin: React.FC = () => {
     setLoading(true);
     try {
       console.log('🔄 Fetching contract data...');
+      
       const name = await contract.name();
       const symbol = await contract.symbol();
       setTokenName(name);
@@ -112,24 +113,33 @@ const Admin: React.FC = () => {
         console.log('⚠️ Auto-mint status not available or contract version mismatch');
       }
 
+      // Variables locales para los detalles de la elección actual en vivo
+      let liveElectionId = 0;
+      let liveElectionName = '';
+      let liveElectionIsActive = false;
+      let liveElectionTotalVotes = 0;
+
       try {
         const electionIdBigNum = await contract.idEleccionActual();
-        const electionId = electionIdBigNum.toNumber();
-        const electionName = await contract.nombreEleccionActual();
-        const isActive = await contract.votacionActiva();
-        const totalVotesBigNum = await contract.obtenerVotosTotales();
-        const totalVotes = totalVotesBigNum.toNumber();
-        setCurrentElection({
-          id: electionId,
-          name: electionName,
-          isActive: isActive,
-          totalVotes: totalVotes,
-          isCurrent: true
-        });
-      } catch (electionError) {
-        console.log('⚠️ No current election data available:', electionError);
-        setCurrentElection({ id: 0, name: '', isActive: false, totalVotes: 0, isCurrent: false });
+        liveElectionId = electionIdBigNum.toNumber();
+
+        if (liveElectionId > 0) {
+          liveElectionName = await contract.nombreEleccionActual();
+          liveElectionIsActive = await contract.votacionActiva();
+          const totalVotesBigNum = await contract.obtenerVotosTotales(); // Obtiene votos para la elección actual
+          liveElectionTotalVotes = totalVotesBigNum.toNumber();
+        }
+      } catch (e) {
+        console.error("Error fetching live details for current election:", e);
       }
+      
+      setCurrentElection({
+        id: liveElectionId,
+        name: liveElectionName,
+        isActive: liveElectionIsActive,
+        totalVotes: liveElectionTotalVotes,
+        isCurrent: liveElectionId > 0 
+      });
 
       try {
         const candidatesList = await contract.obtenerCandidatos();
@@ -148,52 +158,49 @@ const Admin: React.FC = () => {
       }
 
       try {
-        const currentIdBigNum = await contract.idEleccionActual();
-        const currentId = currentIdBigNum.toNumber();
         const historialData: Election[] = [];
-        // Fetch details for past elections if your contract supports it.
-        // This is a simplified version for demonstration.
-        for (let i = 1; i <= currentId; i++) {
-          try {
-            let name = `Elección ${i}`;
-            let isActive = false;
-            let totalVotes = 0;
-            let isCurrent = (i === currentId);
+        const maxElectionIdToIterate = liveElectionId; // Usar el ID de la elección actual obtenida
 
-            if (isCurrent) {
-              name = currentElection.name || await contract.nombreEleccionActual();
-              isActive = currentElection.isActive || await contract.votacionActiva();
-              const votesBigNum = await contract.obtenerVotosTotales(i); // Assuming obtenerVotosTotales can take an ID
-              totalVotes = votesBigNum.toNumber();
-            } else {
-              // For past elections, you might need a specific contract function
-              // e.g., contract.obtenerDetallesEleccion(i)
-              // For now, using placeholder names and assuming they are concluded
-              const pastElectionName = await contract.nombreEleccionPorId(i); // Example: you need this in contract
-              name = pastElectionName || `Elección ${i}`;
-              // totalVotes = await contract.obtenerVotosTotalesPorId(i); // Example
+        for (let i = 1; i <= maxElectionIdToIterate; i++) {
+          let electionEntryName = `Elección ${i}`;
+          let electionEntryIsActive = false;
+          let electionEntryTotalVotes = 0;
+          const isCurrentLoop = (i === liveElectionId);
+
+          if (isCurrentLoop && liveElectionId > 0) {
+            electionEntryName = liveElectionName;
+            electionEntryIsActive = liveElectionIsActive;
+            electionEntryTotalVotes = liveElectionTotalVotes;
+          } else {
+            // Para elecciones pasadas, necesitarías una forma de obtener sus detalles del contrato.
+            // Esto es una limitación si el contrato no guarda/expone nombres y votos finales por ID.
+            // Por ahora, usaremos marcadores de posición.
+            try {
+              // Ejemplo si tu contrato tuviera `nombreEleccionPorId`:
+              // const pastElectionNameFromContract = await contract.nombreEleccionPorId(i);
+              // electionEntryName = pastElectionNameFromContract || `Elección ${i} (Histórica)`;
+              // const pastVotesBigNum = await contract.obtenerVotosEleccionPasada(i); // Necesitarías esta función
+              // electionEntryTotalVotes = pastVotesBigNum.toNumber();
+              electionEntryName = `Elección ${i} (Histórica)`; // Marcador de posición
+              electionEntryIsActive = false; // Las elecciones pasadas están inactivas
+              electionEntryTotalVotes = 0;   // Marcador de posición - el contrato necesita proveer esto
+            } catch (pastError) {
+              console.log(`⚠️ No se pudieron obtener datos completos para la elección pasada ${i}.`, pastError);
+              electionEntryName = `Elección ${i} (Error)`;
+              electionEntryIsActive = false;
+              electionEntryTotalVotes = 0;
             }
-
-            historialData.push({
-              id: i,
-              name: name,
-              isActive: isActive,
-              totalVotes: totalVotes,
-              isCurrent: isCurrent
-            });
-          } catch (error) {
-            console.log(`⚠️ Could not fetch full data for past election ${i}, using minimal data.`, error);
-            // Fallback for individual election fetch error
-            historialData.push({
-              id: i,
-              name: `Elección ${i}`,
-              isActive: false,
-              totalVotes: 0, // Or fetch if possible
-              isCurrent: (i === currentId)
-            });
           }
+
+          historialData.push({
+            id: i,
+            name: electionEntryName,
+            isActive: electionEntryIsActive,
+            totalVotes: electionEntryTotalVotes,
+            isCurrent: isCurrentLoop
+          });
         }
-        setElectionHistory(historialData.sort((a, b) => b.id - a.id)); // Show newest first
+        setElectionHistory(historialData.sort((a, b) => b.id - a.id)); // Mostrar las más nuevas primero
       } catch (historyError) {
         console.log('⚠️ Error fetching election history details:', historyError);
         setElectionHistory([]);
@@ -201,8 +208,8 @@ const Admin: React.FC = () => {
 
       try {
         const ownerBal = await contract.balancePropietario();
-        const tokensNeed = await contract.tokensNecesariosParaTodos();
         setOwnerBalance(ethers.utils.formatEther(ownerBal));
+        const tokensNeed = await contract.tokensNecesariosParaTodos();
         setTokensNeeded(ethers.utils.formatEther(tokensNeed));
       } catch (ownerError) {
         console.log('⚠️ No owner balance data available:', ownerError);
@@ -212,10 +219,21 @@ const Admin: React.FC = () => {
 
     } catch (error) {
       console.error('❌ Error fetching contract data:', error);
+      // Reset states if there's a major error
+      setCurrentElection({ id: 0, name: '', isActive: false, totalVotes: 0, isCurrent: false });
+      setCandidates([]);
+      setRegisteredVoters([]);
+      setElectionHistory([]);
+      setTokenBalance('0');
+      setTokenName('');
+      setTokenSymbol('');
+      setAutoMintEnabled(false);
+      setOwnerBalance('0');
+      setTokensNeeded('0');
     } finally {
       setLoading(false);
     }
-  }, [contract, account]); // Dependencies for fetchContractData
+  }, [contract, account, ethersProvider, fetchAdminEthBalance]); // Asegúrate de que las dependencias sean correctas
 
   useEffect(() => {
     if (contract && isConnected) {
