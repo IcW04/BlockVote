@@ -12,9 +12,10 @@ interface VoteTransaction {
   timestamp: number;
   voter: string;
   candidate: string;
-  electionName: string;
+  electionName: string; // Will be populated more accurately
   gasUsed: string;
   blockHash: string;
+  previousBlockHash: string; // True parent hash of the block
 }
 
 interface TokenTransaction {
@@ -36,6 +37,7 @@ const Blockchain: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'votes' | 'tokens'>('votes');
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
+  const [selectedElectionForFlow, setSelectedElectionForFlow] = useState<string>(''); // '' for All Elections
 
   useEffect(() => {
     if (window.ethereum && contract) {
@@ -46,19 +48,43 @@ const Blockchain: React.FC = () => {
     }
   }, [contract]);
 
-  const fetchVotingTransactions = async (web3Provider?: ethers.providers.Web3Provider) => {
+  const fetchVotingTransactions = async (web3ProviderParam?: ethers.providers.Web3Provider) => {
     if (!contract) return;
 
-    const activeProvider = web3Provider || provider;
+    const activeProvider = web3ProviderParam || provider;
     if (!activeProvider) return;
 
     setLoading(true);
     try {
       console.log('🗳️ Fetching voting transactions...');
 
-      // Obtener eventos de votación desde el contrato
+      const electionDetailsMap = new Map<string, string>();
+      try {
+        const currentId = await contract.idEleccionActual();
+        const currentName = await contract.nombreEleccionActual();
+        electionDetailsMap.set(currentId.toString(), currentName);
+      } catch (e) {
+        console.error("Error fetching current election details:", e);
+      }
+
+      let historyIdx = 0;
+      let continueFetchingHistory = true;
+      while (continueFetchingHistory && historyIdx < 20) { // Limit fetching past elections
+        try {
+          const pastElection = await contract.historialElecciones(historyIdx);
+          if (pastElection && pastElection.id && pastElection.nombre) {
+            electionDetailsMap.set(pastElection.id.toString(), pastElection.nombre);
+            historyIdx++;
+          } else {
+            continueFetchingHistory = false; // Stop if data seems invalid
+          }
+        } catch (e) {
+          continueFetchingHistory = false; // Stop on error (likely out of bounds)
+        }
+      }
+
       const filter = contract.filters.VotoEmitido();
-      const events = await contract.queryFilter(filter, -2000); // Últimos 2000 bloques
+      const events = await contract.queryFilter(filter, -2000);
 
       const voteData: VoteTransaction[] = [];
 
@@ -66,9 +92,10 @@ const Blockchain: React.FC = () => {
         try {
           const block = await activeProvider.getBlock(event.blockNumber);
           const receipt = await activeProvider.getTransactionReceipt(event.transactionHash);
-          
-          // Obtener información adicional del evento
           const parsedEvent = contract.interface.parseLog(event);
+          
+          const eventElectionId = parsedEvent.args.idEleccion.toString();
+          const determinedElectionName = electionDetailsMap.get(eventElectionId) || `Election ID ${eventElectionId}`;
           
           voteData.push({
             transactionHash: event.transactionHash,
@@ -76,16 +103,16 @@ const Blockchain: React.FC = () => {
             timestamp: block.timestamp,
             voter: parsedEvent.args.votante,
             candidate: parsedEvent.args.candidato,
-            electionName: parsedEvent.args.eleccion || 'Unknown Election',
+            electionName: determinedElectionName,
             gasUsed: ethers.utils.formatUnits(receipt.gasUsed, 'gwei'),
-            blockHash: block.hash
+            blockHash: block.hash,
+            previousBlockHash: block.parentHash 
           });
         } catch (error) {
           console.error('Error processing vote event:', error);
         }
       }
 
-      // Ordenar por bloque más reciente primero
       voteData.sort((a, b) => b.blockNumber - a.blockNumber);
       setVoteTransactions(voteData);
 
@@ -96,10 +123,10 @@ const Blockchain: React.FC = () => {
     }
   };
 
-  const fetchTokenTransactions = async (web3Provider?: ethers.providers.Web3Provider) => {
+  const fetchTokenTransactions = async (web3ProviderParam?: ethers.providers.Web3Provider) => {
     if (!contract) return;
 
-    const activeProvider = web3Provider || provider; // Corrected variable name
+    const activeProvider = web3ProviderParam || provider; // Corrected variable name
     if (!activeProvider) return;
 
     try {
@@ -158,6 +185,17 @@ const Blockchain: React.FC = () => {
   const truncateAddress = (address: string): string => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+
+  const uniqueElectionNames = ['', ...Array.from(new Set(voteTransactions.map(v => v.electionName))).sort()];
+
+  // Prepare votes for the flow visualization
+  const filteredFlowVotes = selectedElectionForFlow
+    ? voteTransactions.filter(v => v.electionName === selectedElectionForFlow)
+    : voteTransactions;
+  
+  // Take the 5 newest votes from the filtered list and then reverse them 
+  // so the oldest of these 5 is first, and newest is last for left-to-right chronological flow.
+  const displayedFlowVotes = filteredFlowVotes.slice(0, 5).reverse();
 
   return (
     <div className="container">
@@ -396,32 +434,62 @@ const Blockchain: React.FC = () => {
         <div className="row mt-4">
           <div className="col-12">
             <Card title="Vote Flow Visualization">
+              <div className="mb-3">
+                <label htmlFor="electionFlowFilter" className="form-label">Filter by Election:</label>
+                <select 
+                  id="electionFlowFilter"
+                  className="form-select"
+                  value={selectedElectionForFlow}
+                  onChange={(e) => setSelectedElectionForFlow(e.target.value)}
+                >
+                  {uniqueElectionNames.map(name => (
+                    <option key={name || 'all'} value={name}>
+                      {name || 'All Elections'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="d-flex overflow-auto pb-3" style={{ minHeight: '200px' }}>
-                {voteTransactions.slice(0, 5).map((vote, index) => (
-                  <div key={vote.transactionHash} className="d-flex align-items-center flex-shrink-0">
-                    <div 
-                      className="border rounded p-3 text-center border-success bg-success-subtle"
-                      style={{ minWidth: '250px' }}
-                    >
-                      <div className="fw-bold">Vote #{voteTransactions.length - index}</div>
-                      <div className="small text-muted mb-2">{formatTimestamp(vote.timestamp)}</div>
-                      <div className="small">
-                        <div><strong>Block:</strong> #{vote.blockNumber}</div>
-                        <div><strong>Voter:</strong> {truncateAddress(vote.voter)}</div>
-                        <div><strong>Candidate:</strong> {vote.candidate}</div>
+                {displayedFlowVotes.map((vote, index, arr) => {
+                  // In the reversed array (oldest to newest), the chronologically previous vote is arr[index - 1]
+                  const chronologicallyPreviousVoteInFlow = arr[index - 1]; 
+                  return (
+                    <div key={vote.transactionHash} className="d-flex align-items-center flex-shrink-0">
+                      <div 
+                        className="border rounded p-3 text-center border-success bg-success-subtle"
+                        style={{ minWidth: '280px' }} 
+                      >
+                        {/* Vote numbering reflects position in the displayed sequence (1 to N) */}
+                        <div className="fw-bold">Vote #{index + 1} (Sequence)</div>
+                        <div className="small text-muted mb-1">{formatTimestamp(vote.timestamp)}</div>
+                        <div className="small text-start"> 
+                          <div><strong>Election:</strong> {vote.electionName}</div>
+                          <div><strong>Block:</strong> #{vote.blockNumber}</div>
+                          <div><strong>Voter:</strong> {truncateAddress(vote.voter)}</div>
+                          <div><strong>Candidate:</strong> {vote.candidate}</div>
+                          <div><strong>Hash:</strong> {truncateHash(vote.blockHash, 6, 4)}</div>
+                          <div>
+                            <strong>Prev. Hash (Link):</strong> {chronologicallyPreviousVoteInFlow ? truncateHash(chronologicallyPreviousVoteInFlow.blockHash, 6, 4) : 'N/A'}
+                          </div>
+                          <div style={{ fontSize: '0.75em', opacity: 0.7 }}>
+                            Actual Prev. Block Hash: {truncateHash(vote.previousBlockHash, 6, 4)}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <code className="small">{truncateHash(vote.transactionHash, 10, 6)}</code>
+                        </div>
                       </div>
-                      <div className="mt-2">
-                        <code className="small">{truncateHash(vote.transactionHash, 10, 6)}</code>
-                      </div>
+                      
+                      {/* Arrow points from current (older) to next (newer) in sequence */}
+                      {index < arr.length - 1 && index < 4 && ( 
+                        <div className="mx-3">
+                          <i className="bi bi-arrow-right fs-4 text-success"></i>
+                        </div>
+                      )}
                     </div>
-                    
-                    {index < Math.min(4, voteTransactions.length - 1) && (
-                      <div className="mx-3">
-                        <i className="bi bi-arrow-right fs-4 text-success"></i>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="mt-3 text-center">
                 <small className="text-muted">

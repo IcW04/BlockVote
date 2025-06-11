@@ -312,8 +312,8 @@ const Admin: React.FC = () => {
           <div className="text-center">
             <small className="text-muted">Connected as: {account}</small>
             <span className="badge bg-success ms-2">✅ AUTHORIZED ADMIN</span>
-            <br />
-            <small className="text-muted">{tokenName} ({tokenSymbol}) Balance: {parseFloat(tokenBalance).toFixed(2)}</small>
+            {/* <br />
+            <small className="text-muted">{tokenName} ({tokenSymbol}) Balance: {parseFloat(tokenBalance).toFixed(2)}</small> */}
             <br />
             <small className="text-muted">SepoliaETH Balance: {parseFloat(adminSepoliaEthBalance).toFixed(4)} ETH</small>
           </div>

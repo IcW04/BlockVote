@@ -237,7 +237,7 @@ export const TokenDistributionTabContent: React.FC<TokenDistributionTabContentPr
   return (
     <div className="row">
       {/* Token Distribution Overview */}
-      <div className="col-12 mb-4">
+      {/* <div className="col-12 mb-4">
         <Card title={<><i className="bi bi-info-circle-fill me-2"></i>Token Distribution Overview</>}>
           <div className="row">
             <div className="col-md-4">
@@ -261,7 +261,7 @@ export const TokenDistributionTabContent: React.FC<TokenDistributionTabContentPr
             </div>
           )}
         </Card>
-      </div>
+      </div> */}
 
       {/* Subsidize Gas (Send SepoliaETH) */}
       <div className="col-md-6 mb-4">
