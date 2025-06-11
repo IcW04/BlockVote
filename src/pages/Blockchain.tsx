@@ -200,37 +200,33 @@ const Blockchain: React.FC = () => {
   return (
     <div className="container">
       <div className="row">
-        <div className="col-12 mb-4">
-          <h1 className="display-5 fw-bold text-center">Voting Blockchain Explorer</h1>
+        <div className="col-12 mb-4">          <h1 className="display-5 fw-bold text-center">Explorador de Blockchain de Votación</h1>
           <p className="text-center text-muted">
-            Track all voting transactions and token distributions on the blockchain
+            Rastrea todas las transacciones de votación y distribución de tokens en la blockchain
           </p>
         </div>
       </div>
 
       {/* Stats Header */}
       <div className="row mb-4">
-        <div className="col-md-3">
-          <Card title="Total Votes Cast">
+        <div className="col-md-3">          <Card title="Total de Votos Emitidos">
             <div className="text-center">
               <h3 className="text-primary">{voteTransactions.length}</h3>
-              <small className="text-muted">Votes Recorded</small>
+              <small className="text-muted">Votos Registrados</small>
             </div>
           </Card>
         </div>
-        <div className="col-md-3">
-          <Card title="Token Transfers">
+        <div className="col-md-3">          <Card title="Transferencias de Tokens">
             <div className="text-center">
               <h3 className="text-success">{tokenTransactions.length}</h3>
-              <small className="text-muted">Token Movements</small>
+              <small className="text-muted">Movimientos de Tokens</small>
             </div>
           </Card>
         </div>
-        <div className="col-md-3">
-          <Card title="Contract Address">
+        <div className="col-md-3">          <Card title="Dirección del Contrato">
             <div className="text-center">
               <h6 className="text-info">{truncateAddress(CONTRACT_ADDRESS)}</h6>
-              <small className="text-muted">Voting Contract</small>
+              <small className="text-muted">Contrato de Votación</small>
             </div>
           </Card>
         </div>
@@ -244,16 +240,15 @@ const Blockchain: React.FC = () => {
               }}
               disabled={loading}
               className="h-100"
-            >
-              {loading ? (
+            >              {loading ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2"></span>
-                  Refreshing...
+                  Actualizando...
                 </>
               ) : (
                 <>
                   <i className="bi bi-arrow-clockwise me-2"></i>
-                  Refresh Data
+                  Actualizar Datos
                 </>
               )}
             </Button>
@@ -269,18 +264,16 @@ const Blockchain: React.FC = () => {
               <button
                 className={`nav-link ${activeTab === 'votes' ? 'active' : ''}`}
                 onClick={() => setActiveTab('votes')}
-              >
-                <i className="bi bi-check-circle me-2"></i>
-                Vote Transactions ({voteTransactions.length})
+              >                <i className="bi bi-check-circle me-2"></i>
+                Transacciones de Votos ({voteTransactions.length})
               </button>
             </li>
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'tokens' ? 'active' : ''}`}
                 onClick={() => setActiveTab('tokens')}
-              >
-                <i className="bi bi-coin me-2"></i>
-                Token Transactions ({tokenTransactions.length})
+              >                <i className="bi bi-coin me-2"></i>
+                Transacciones de Tokens ({tokenTransactions.length})
               </button>
             </li>
           </ul>
@@ -291,32 +284,29 @@ const Blockchain: React.FC = () => {
       {activeTab === 'votes' && (
         <div className="row">
           <div className="col-12">
-            <Card title="Voting Transaction History">
-              {loading ? (
-                <div className="text-center py-4">
+            <Card title="Historial de Transacciones de Votación">
+              {loading ? (                <div className="text-center py-4">
                   <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">Cargando...</span>
                   </div>
-                  <p className="mt-3">Loading voting transactions...</p>
+                  <p className="mt-3">Cargando transacciones de votación...</p>
                 </div>
-              ) : voteTransactions.length === 0 ? (
-                <div className="text-center py-4">
+              ) : voteTransactions.length === 0 ? (                <div className="text-center py-4">
                   <i className="bi bi-ballot fs-1 text-muted mb-3"></i>
-                  <h5>No Votes Cast Yet</h5>
-                  <p className="text-muted">When users cast votes, they will appear here with full blockchain transparency.</p>
+                  <h5>No se han Emitido Votos Aún</h5>
+                  <p className="text-muted">Cuando los usuarios emitan votos, aparecerán aquí con total transparencia de blockchain.</p>
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead className="table-dark">
+                  <table className="table table-hover">                    <thead className="table-dark">
                       <tr>
-                        <th>Block #</th>
-                        <th>Transaction Hash</th>
-                        <th>Timestamp</th>
-                        <th>Voter</th>
-                        <th>Candidate</th>
-                        <th>Election</th>
-                        <th>Gas Used</th>
+                        <th>Bloque #</th>
+                        <th>Hash de Transacción</th>
+                        <th>Fecha y Hora</th>
+                        <th>Votante</th>
+                        <th>Candidato</th>
+                        <th>Elección</th>
+                        <th>Gas Usado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -358,33 +348,30 @@ const Blockchain: React.FC = () => {
       {activeTab === 'tokens' && (
         <div className="row">
           <div className="col-12">
-            <Card title="Token Distribution History">
-              {loading ? (
-                <div className="text-center py-4">
+            <Card title="Historial de Distribución de Tokens">
+              {loading ? (                <div className="text-center py-4">
                   <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading...</span>
+                    <span className="visually-hidden">Cargando...</span>
                   </div>
-                  <p className="mt-3">Loading token transactions...</p>
+                  <p className="mt-3">Cargando transacciones de tokens...</p>
                 </div>
-              ) : tokenTransactions.length === 0 ? (
-                <div className="text-center py-4">
+              ) : tokenTransactions.length === 0 ? (                <div className="text-center py-4">
                   <i className="bi bi-coin fs-1 text-muted mb-3"></i>
-                  <h5>No Token Transactions Yet</h5>
-                  <p className="text-muted">Token minting and transfers will appear here.</p>
+                  <h5>No hay Transacciones de Tokens Aún</h5>
+                  <p className="text-muted">Las acuñaciones y transferencias de tokens aparecerán aquí.</p>
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead className="table-dark">
+                  <table className="table table-hover">                    <thead className="table-dark">
                       <tr>
-                        <th>Block #</th>
-                        <th>Transaction Hash</th>
-                        <th>Timestamp</th>
-                        <th>Type</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Amount</th>
-                        <th>Gas Used</th>
+                        <th>Bloque #</th>
+                        <th>Hash de Transacción</th>
+                        <th>Fecha y Hora</th>
+                        <th>Tipo</th>
+                        <th>De</th>
+                        <th>Para</th>
+                        <th>Cantidad</th>
+                        <th>Gas Usado</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -398,15 +385,14 @@ const Blockchain: React.FC = () => {
                           </td>
                           <td>
                             <small>{formatTimestamp(token.timestamp)}</small>
-                          </td>
-                          <td>
+                          </td>                          <td>
                             <span className={`badge ${token.type === 'mint' ? 'bg-success' : 'bg-primary'}`}>
-                              {token.type === 'mint' ? 'MINT' : 'TRANSFER'}
+                              {token.type === 'mint' ? 'ACUÑAR' : 'TRANSFERIR'}
                             </span>
                           </td>
                           <td>
                             <code className="text-secondary">
-                              {token.from === ethers.constants.AddressZero ? 'SYSTEM' : truncateAddress(token.from)}
+                              {token.from === ethers.constants.AddressZero ? 'SISTEMA' : truncateAddress(token.from)}
                             </code>
                           </td>
                           <td>
@@ -433,9 +419,8 @@ const Blockchain: React.FC = () => {
       {activeTab === 'votes' && voteTransactions.length > 0 && (
         <div className="row mt-4">
           <div className="col-12">
-            <Card title="Vote Flow Visualization">
-              <div className="mb-3">
-                <label htmlFor="electionFlowFilter" className="form-label">Filter by Election:</label>
+            <Card title="Visualización de Flujo de Votos">              <div className="mb-3">
+                <label htmlFor="electionFlowFilter" className="form-label">Filtrar por Elección:</label>
                 <select 
                   id="electionFlowFilter"
                   className="form-select"
@@ -444,7 +429,7 @@ const Blockchain: React.FC = () => {
                 >
                   {uniqueElectionNames.map(name => (
                     <option key={name || 'all'} value={name}>
-                      {name || 'All Elections'}
+                      {name || 'Todas las Elecciones'}
                     </option>
                   ))}
                 </select>
@@ -459,21 +444,20 @@ const Blockchain: React.FC = () => {
                       <div 
                         className="border rounded p-3 text-center border-success bg-success-subtle"
                         style={{ minWidth: '280px' }} 
-                      >
-                        {/* Vote numbering reflects position in the displayed sequence (1 to N) */}
-                        <div className="fw-bold">Vote #{index + 1} (Sequence)</div>
+                      >                        {/* Vote numbering reflects position in the displayed sequence (1 to N) */}
+                        <div className="fw-bold">Voto #{index + 1} (Secuencia)</div>
                         <div className="small text-muted mb-1">{formatTimestamp(vote.timestamp)}</div>
                         <div className="small text-start"> 
-                          <div><strong>Election:</strong> {vote.electionName}</div>
-                          <div><strong>Block:</strong> #{vote.blockNumber}</div>
-                          <div><strong>Voter:</strong> {truncateAddress(vote.voter)}</div>
-                          <div><strong>Candidate:</strong> {vote.candidate}</div>
+                          <div><strong>Elección:</strong> {vote.electionName}</div>
+                          <div><strong>Bloque:</strong> #{vote.blockNumber}</div>
+                          <div><strong>Votante:</strong> {truncateAddress(vote.voter)}</div>
+                          <div><strong>Candidato:</strong> {vote.candidate}</div>
                           <div><strong>Hash:</strong> {truncateHash(vote.blockHash, 6, 4)}</div>
                           <div>
-                            <strong>Prev. Hash (Link):</strong> {chronologicallyPreviousVoteInFlow ? truncateHash(chronologicallyPreviousVoteInFlow.blockHash, 6, 4) : 'N/A'}
+                            <strong>Hash Ant. (Enlace):</strong> {chronologicallyPreviousVoteInFlow ? truncateHash(chronologicallyPreviousVoteInFlow.blockHash, 6, 4) : 'N/A'}
                           </div>
                           <div style={{ fontSize: '0.75em', opacity: 0.7 }}>
-                            Actual Prev. Block Hash: {truncateHash(vote.previousBlockHash, 6, 4)}
+                            Hash Bloque Ant. Real: {truncateHash(vote.previousBlockHash, 6, 4)}
                           </div>
                         </div>
                         <div className="mt-2">
@@ -490,12 +474,11 @@ const Blockchain: React.FC = () => {
                     </div>
                   );
                 })}
-              </div>
-              <div className="mt-3 text-center">
+              </div>              <div className="mt-3 text-center">
                 <small className="text-muted">
                   <i className="bi bi-info-circle me-1"></i>
-                  This shows the chronological flow of votes cast in your election system.
-                  Each vote is permanently recorded on the blockchain for transparency.
+                  Esto muestra el flujo cronológico de votos emitidos en tu sistema de elecciones.
+                  Cada voto queda registrado permanentemente en la blockchain para transparencia.
                 </small>
               </div>
             </Card>

@@ -6,10 +6,10 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const Charts: React.FC = () => {
   const data = {
-    labels: ['Candidate A', 'Candidate B', 'Candidate C'],
+    labels: ['Candidato A', 'Candidato B', 'Candidato C'],
     datasets: [
       {
-        label: 'Votes',
+        label: 'Votos',
         data: [12, 19, 3],
         backgroundColor: 'rgba(53, 162, 235, 0.5)',
       },
@@ -24,7 +24,7 @@ const Charts: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Voting Results',
+        text: 'Resultados de Votación',
       },
     },
   };

@@ -16,7 +16,7 @@ const VoteButton: React.FC<VoteButtonProps> = ({ candidate }) => {
     return (
         <Button
             onClick={handleVote}
-            label={loading ? 'Voting...' : 'Vote'}
+            label={loading ? 'Votando...' : 'Votar'}
             disabled={loading}
         />
     );

@@ -26,9 +26,8 @@ export const CandidatesTabContent: React.FC<CandidatesTabContentProps> = ({
   const [newCandidateName, setNewCandidateName] = useState('');
 
   const handleAddCandidate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contract || !isConnected || !isAdmin || !newCandidateName.trim()) {
-      alert('Unauthorized access or candidate name is empty. Only admin can add candidates.');
+    e.preventDefault();    if (!contract || !isConnected || !isAdmin || !newCandidateName.trim()) {
+      alert('Acceso no autorizado o nombre del candidato vacío. Solo el administrador puede agregar candidatos.');
       return;
     }
 
@@ -36,61 +35,57 @@ export const CandidatesTabContent: React.FC<CandidatesTabContentProps> = ({
     try {
       const tx = await contract.agregarCandidato(newCandidateName.trim());
       await tx.wait();
-      setNewCandidateName('');
-      await fetchContractData(); // Refresh candidates list and other data
-      alert('Candidate added successfully!');
+      setNewCandidateName('');      await fetchContractData(); // Refresh candidates list and other data
+      alert('¡Candidato agregado exitosamente!');
     } catch (error) {
       console.error('Error adding candidate:', error);
-      alert('Error adding candidate. Please try again.');
+      alert('Error al agregar candidato. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRemoveCandidate = async (candidateName: string) => {
-    if (!contract || !isConnected || !isAdmin) {
-      alert('Unauthorized access. Only admin can remove candidates.');
+  const handleRemoveCandidate = async (candidateName: string) => {    if (!contract || !isConnected || !isAdmin) {
+      alert('Acceso no autorizado. Solo el administrador puede eliminar candidatos.');
       return;
     }
 
-    const confirmed = window.confirm(`Are you sure you want to remove candidate "${candidateName}"?`);
+    const confirmed = window.confirm(`¿Estás seguro de que quieres eliminar al candidato "${candidateName}"?`);
     if (!confirmed) return;
 
     setLoading(true);
     try {
       const tx = await contract.eliminarCandidato(candidateName);
-      await tx.wait();
-      await fetchContractData(); // Refresh candidates list and other data
-      alert('Candidate removed successfully!');
+      await tx.wait();      await fetchContractData(); // Refresh candidates list and other data
+      alert('¡Candidato eliminado exitosamente!');
     } catch (error) {
       console.error('Error removing candidate:', error);
-      alert('Error removing candidate. Please try again.');
+      alert('Error al eliminar candidato. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="row">
-      {/* Add New Candidate */}
+    <div className="row">      {/* Add New Candidate */}
       <div className="col-md-6 mb-4">
-        <Card title="Add New Candidate">
+        <Card title="Agregar Nuevo Candidato">
           <form onSubmit={handleAddCandidate}>
             <div className="mb-3">
               <label htmlFor="candidateName" className="form-label">
                 <i className="bi bi-person-plus-fill me-2"></i>
-                Candidate Name
+                Nombre del Candidato
               </label>
               <Input
                 type="text"
                 id="candidateName"
-                placeholder="Enter candidate's full name"
+                placeholder="Ingresa el nombre completo del candidato"
                 value={newCandidateName}
                 onChange={(e) => setNewCandidateName(e.target.value)}
                 required
               />
               <small className="text-muted">
-                The name of the candidate to add to the current election.
+                El nombre del candidato para agregar a la elección actual.
               </small>
             </div>
             <div className="d-grid">
@@ -100,19 +95,17 @@ export const CandidatesTabContent: React.FC<CandidatesTabContentProps> = ({
                 disabled={loading || !newCandidateName.trim()}
               >
                 {loading ? (
-                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Adding...</>
+                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Agregando...</>
                 ) : (
-                  <><i className="bi bi-plus-lg me-2"></i>Add Candidate</>
+                  <><i className="bi bi-plus-lg me-2"></i>Agregar Candidato</>
                 )}
               </Button>
             </div>
           </form>
         </Card>
-      </div>
-
-      {/* Current Candidates */}
+      </div>      {/* Current Candidates */}
       <div className="col-md-6 mb-4">
-        <Card title="Current Candidates">
+        <Card title="Candidatos Actuales">
           {candidates.length > 0 ? (
             <ul className="list-group">
               {candidates.map((candidate, index) => (
@@ -135,12 +128,12 @@ export const CandidatesTabContent: React.FC<CandidatesTabContentProps> = ({
           ) : (
             <div className="alert alert-light" role="alert">
               <i className="bi bi-people me-2"></i>
-              No candidates have been added to the current election yet.
+              Aún no se han agregado candidatos a la elección actual.
             </div>
           )}
           {currentElection && currentElection.id === 0 && (
              <small className="text-muted d-block mt-2">
-                Note: Candidates are associated with an active election. Please create or ensure an election is active.
+                Nota: Los candidatos están asociados a una elección activa. Por favor, crea o asegúrate de que una elección esté activa.
              </small>
           )}
         </Card>
