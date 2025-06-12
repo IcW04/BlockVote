@@ -5,6 +5,7 @@ import { useVotingTokens } from '../hooks/useVotingTokens';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { ethers } from 'ethers';
+import { Link } from 'react-router-dom';
 
 interface Candidate {
   name: string;
@@ -20,6 +21,7 @@ const Voting: React.FC = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<string>('');
   const [isVoting, setIsVoting] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
+  const [isUserRegistered, setIsUserRegistered] = useState<boolean | null>(null); // null = verificando, true = registrado, false = no registrado
   const [currentElection, setCurrentElection] = useState({
     name: '',
     isActive: false,
@@ -30,10 +32,26 @@ const Voting: React.FC = () => {
 
   useEffect(() => {
     if (contract && isConnected && account) {
+      checkUserRegistration();
       loadElectionData();
       checkUserStatus();
     }
   }, [contract, isConnected, account]);
+
+  // Nueva función para verificar si el usuario está registrado
+  const checkUserRegistration = async () => {
+    if (!contract || !account) return;
+    
+    try {
+      console.log('🔍 Verificando registro del usuario...');
+      const registrado = await contract.usuarioRegistrado(account);
+      setIsUserRegistered(registrado);
+      console.log('📋 Usuario registrado:', registrado);
+    } catch (error) {
+      console.error('Error verificando registro del usuario:', error);
+      setIsUserRegistered(false);
+    }
+  };
 
   const loadElectionData = async () => {
     if (!contract) return;
@@ -119,6 +137,11 @@ const Voting: React.FC = () => {
       return;
     }
 
+    if (!isUserRegistered) {
+      alert('Debes registrarte primero antes de votar.');
+      return;
+    }
+
     if (hasVoted) {
       alert('Ya has votado en esta elección.');
       return;
@@ -201,6 +224,7 @@ const Voting: React.FC = () => {
     }
   };
 
+  // Si no está conectado
   if (!isConnected) {
     return (
       <div className="container">
@@ -210,6 +234,59 @@ const Voting: React.FC = () => {
               <div className="text-center">
                 <p className="mb-3">Conecta tu wallet para participar en la votación</p>
                 <p className="text-muted">Necesitas MetaMask para votar</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si está verificando el registro
+  if (isUserRegistered === null) {
+    return (
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-6">
+            <Card title="🗳️ Sistema de Votación Blockchain">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Verificando...</span>
+                </div>
+                <p className="mt-2">Verificando tu registro...</p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no está registrado
+  if (!isUserRegistered) {
+    return (
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-8">
+            <Card title="📋 Registro Requerido">
+              <div className="text-center">
+                <div className="alert alert-warning" role="alert">
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  <strong>Debes registrarte antes de votar</strong>
+                </div>
+                <p className="mb-4">
+                  Para participar en el proceso de votación, primero debes registrar tu municipio en el sistema.
+                </p>
+                <div className="d-grid gap-2 col-md-6 mx-auto">
+                  <Link to="/registro" className="btn btn-primary btn-lg">
+                    <i className="bi bi-person-plus-fill me-2"></i>
+                    Ir a Registro
+                  </Link>
+                  <Link to="/" className="btn btn-outline-secondary">
+                    <i className="bi bi-house me-2"></i>
+                    Volver al Inicio
+                  </Link>
+                </div>
               </div>
             </Card>
           </div>

@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Voting from './pages/Voting';
 import Admin from './pages/Admin';
 import Blockchain from './pages/Blockchain';
+import MunicipioRegistration from './components/Auth/MunicipioRegistration';
 import './index.css';
 
 function App() {
@@ -32,6 +33,11 @@ function App() {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/registro">
+                    Registro
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link className="nav-link" to="/voting">
                     Vote
                   </Link>
@@ -55,6 +61,7 @@ function App() {
         <main className="container py-4">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/registro" element={<MunicipioRegistration />} />
             <Route path="/voting" element={<Voting />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/blockchain" element={<Blockchain />} />
