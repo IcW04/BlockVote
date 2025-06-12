@@ -334,11 +334,11 @@ export const TokenDistributionTabContent: React.FC<TokenDistributionTabContentPr
       </div>
       
       {/* Bulk Token Minting/Distribution */}
-      {/* <div className="col-md-6 mb-4">
-        <Card title={<><i className="bi bi-people-fill me-2"></i>Bulk Token Distribution</>}>
+      <div className="col-md-6 mb-4">
+        <Card title={<><i className="bi bi-people-fill me-2"></i>Distribución Masiva de Token</>}>
           <form onSubmit={handleBulkMintTokens}>
             <div className="mb-3">
-              <label htmlFor="bulkMintDataAdmin" className="form-label">Recipient Data (CSV: address,amount)</label>
+              <label htmlFor="bulkMintDataAdmin" className="form-label">Información de Data (CSV: address, Cantidad)</label>
               <textarea
                 id="bulkMintDataAdmin"
                 className="form-control form-control-sm"
@@ -348,16 +348,16 @@ export const TokenDistributionTabContent: React.FC<TokenDistributionTabContentPr
                 onChange={(e) => setBulkMintData(e.target.value)}
                 required
               />
-              <small className="text-muted">One entry per line. Example: <code>0x123...,2.5</code></small>
+              <small className="text-muted">Una entrada por línea.. Por Ejemplo: <code>0x123...,2.5</code></small>
             </div>
             <div className="d-grid">
               <Button type="submit" variant="success" disabled={loading || !bulkMintData.trim()}>
-                {loading ? (<><span className="spinner-border spinner-border-sm me-2"></span>Processing Bulk...</>) : (<><i className="bi bi-lightning-charge-fill me-2"></i>Process Bulk Distribution</>) }
+                {loading ? (<><span className="spinner-border spinner-border-sm me-2"></span>Masiva Procesando...</>) : (<><i className="bi bi-lightning-charge-fill me-2"></i>Process Bulk Distribution</>) }
               </Button>
             </div>
           </form>
         </Card>
-      </div> */}
+      </div>
 
       {/* Automatic Token System Configuration */}
       {/* <div className="col-md-6 mb-4">
