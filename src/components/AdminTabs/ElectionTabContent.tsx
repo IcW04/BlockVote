@@ -33,9 +33,8 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
   const [newElectionName, setNewElectionName] = useState('');
 
   const handleCreateElection = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contract || !isConnected || !isAdmin || !newElectionName.trim()) {
-      alert('Unauthorized access or election name is empty. Only admin can create elections.');
+    e.preventDefault();    if (!contract || !isConnected || !isAdmin || !newElectionName.trim()) {
+      alert('Acceso no autorizado o el nombre de la elección está vacío. Solo el administrador puede crear elecciones.');
       return;
     }
 
@@ -45,18 +44,17 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
       await tx.wait();
       setNewElectionName('');
       await fetchContractData();
-      alert('Election created successfully!');
+      alert('¡Elección creada exitosamente!');
     } catch (error) {
       console.error('Error creating election:', error);
-      alert('Error creating election. Please try again.');
+      alert('Error al crear la elección. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleToggleVoting = async () => {
-    if (!contract || !isConnected || !isAdmin) {
-      alert('Unauthorized access. Only admin can toggle voting.');
+  const handleToggleVoting = async () => {    if (!contract || !isConnected || !isAdmin) {
+      alert('Acceso no autorizado. Solo el administrador puede alternar la votación.');
       return;
     }
 
@@ -65,10 +63,10 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
       const tx = await contract.activarVotacion(!currentElection.isActive);
       await tx.wait();
       await fetchContractData();
-      alert(`Voting ${!currentElection.isActive ? 'activated' : 'deactivated'} successfully!`);
+      alert(`Votación ${!currentElection.isActive ? 'activada' : 'desactivada'} exitosamente!`);
     } catch (error) {
       console.error('Error toggling voting:', error);
-      alert('Error toggling voting status. Please try again.');
+      alert('Error al cambiar el estado de la votación. Por favor, inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -78,23 +76,21 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
     <div className="row">
       {/* Create New Election */}
       <div className="col-md-6 mb-4">
-        <Card title="Create New Election">
+        <Card title="Crear Nueva Elección">
           <form onSubmit={handleCreateElection}>
-            <div className="mb-3">
-              <label htmlFor="electionName" className="form-label">
+            <div className="mb-3">              <label htmlFor="electionName" className="form-label">
                 <i className="bi bi-flag-fill me-2"></i>
-                Election Name
+                Nombre de la Elección
               </label>
               <Input
                 type="text"
                 id="electionName"
-                placeholder="e.g., Presidential Election 2024"
+                placeholder="ej., Elección Presidencial 2024"
                 value={newElectionName}
                 onChange={(e) => setNewElectionName(e.target.value)}
                 required
-              />
-              <small className="text-muted">
-                Enter a descriptive name for the new election.
+              />              <small className="text-muted">
+                Ingresa un nombre descriptivo para la nueva elección.
               </small>
             </div>
             <div className="d-grid">
@@ -102,11 +98,10 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
                 type="submit" 
                 variant="primary" 
                 disabled={loading || !newElectionName.trim()}
-              >
-                {loading ? (
-                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creating...</>
+              >                {loading ? (
+                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creando...</>
                 ) : (
-                  <><i className="bi bi-plus-circle-fill me-2"></i>Create Election</>
+                  <><i className="bi bi-plus-circle-fill me-2"></i>Crear Elección</>
                 )}
               </Button>
             </div>
@@ -116,43 +111,39 @@ export const ElectionTabContent: React.FC<ElectionTabContentProps> = ({
 
       {/* Current Election Status */}
       <div className="col-md-6 mb-4">
-        <Card title="Current Election Status">
+        <Card title="Estado de la Elección Actual">
           {currentElection && currentElection.id > 0 ? (
             <>
               <h5>
                 <i className={`bi ${currentElection.isActive ? 'bi-play-circle-fill text-success' : 'bi-pause-circle-fill text-warning'} me-2`}></i>
                 {currentElection.name} (ID: {currentElection.id})
-              </h5>
-              <p>
-                Status: 
+              </h5>              <p>
+                Estado: 
                 <span className={`badge bg-${currentElection.isActive ? 'success' : 'warning'} ms-2`}>
-                  {currentElection.isActive ? 'Active' : 'Inactive'}
+                  {currentElection.isActive ? 'Activa' : 'Inactiva'}
                 </span>
               </p>
-              <p>Total Votes Cast: {currentElection.totalVotes}</p>
+              <p>Total de Votos Emitidos: {currentElection.totalVotes}</p>
               <div className="d-grid">
                 <Button 
                   variant={currentElection.isActive ? 'danger' : 'success'} 
                   onClick={handleToggleVoting} 
                   disabled={loading}
-                >
-                  {loading ? (
-                    <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...</>
+                >                  {loading ? (
+                    <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...</>
                   ) : currentElection.isActive ? (
-                    <><i className="bi bi-stop-circle-fill me-2"></i>Deactivate Voting</>
+                    <><i className="bi bi-stop-circle-fill me-2"></i>Desactivar Votación</>
                   ) : (
-                    <><i className="bi bi-play-circle-fill me-2"></i>Activate Voting</>
+                    <><i className="bi bi-play-circle-fill me-2"></i>Activar Votación</>
                   )}
                 </Button>
-              </div>
-              <small className="text-muted d-block mt-2">
-                Activate or deactivate voting for the current election.
+              </div>              <small className="text-muted d-block mt-2">
+                Activa o desactiva la votación para la elección actual.
               </small>
             </>
-          ) : (
-            <div className="alert alert-info" role="alert">
+          ) : (            <div className="alert alert-info" role="alert">
               <i className="bi bi-info-circle-fill me-2"></i>
-              No election is currently active or set up. Create one to begin.
+              No hay ninguna elección activa o configurada actualmente. Crea una para comenzar.
             </div>
           )}
         </Card>

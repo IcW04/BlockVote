@@ -258,17 +258,16 @@ const Admin: React.FC = () => {
 
   // ... Other handlers like handleAddCandidate, handleMintTokens, etc., will be moved to their respective tab components later
   // For example, handleCreateElection and handleToggleVoting are now in ElectionTabContent.tsx
-
   if (!isConnected) {
     return (
       <div className="container">
         <div className="row">
           <div className="col-md-6 mx-auto">
-            <Card title="Admin Access Required">
+            <Card title="Acceso de Administrador Requerido">
               <div className="text-center">
                 <i className="bi bi-shield-lock fs-1 text-muted mb-3"></i>
-                <p className="lead">Please connect your wallet to access the admin dashboard</p>
-                <small className="text-muted">Only authorized admin accounts can access this area</small>
+                <p className="lead">Por favor, conecta tu billetera para acceder al panel de administración</p>
+                <small className="text-muted">Solo las cuentas de administrador autorizadas pueden acceder a esta área</small>
               </div>
             </Card>
           </div>
@@ -276,25 +275,24 @@ const Admin: React.FC = () => {
       </div>
     );
   }
-
   if (isConnected && !isAdmin) {
     return (
       <div className="container">
         <div className="row">
           <div className="col-md-8 mx-auto">
-            <Card title="Access Denied">
+            <Card title="Acceso Denegado">
               <div className="text-center">
                 <i className="bi bi-shield-exclamation fs-1 text-danger mb-3"></i>
-                <h4 className="text-danger">Unauthorized Access</h4>
-                <p className="lead">You don't have permission to access the Admin Dashboard.</p>
+                <h4 className="text-danger">Acceso no Autorizado</h4>
+                <p className="lead">No tienes permiso para acceder al Panel de Administración.</p>
                 <div className="alert alert-warning" role="alert">
-                  <strong>Current Account:</strong> <code>{account}</code><br/>
-                  <strong>Required Account:</strong> <code>{ADMIN_ADDRESS}</code>
+                  <strong>Cuenta Actual:</strong> <code>{account}</code><br/>
+                  <strong>Cuenta Requerida:</strong> <code>{ADMIN_ADDRESS}</code>
                 </div>
-                <p className="text-muted">Only the authorized admin account can manage elections, candidates, and token distribution. Please connect with the correct admin wallet.</p>
+                <p className="text-muted">Solo la cuenta de administrador autorizada puede gestionar elecciones, candidatos y la distribución de tokens. Por favor, conéctate con la billetera de administrador correcta.</p>
                 <div className="d-grid gap-2 col-md-6 mx-auto">
-                  <Button variant="primary" onClick={() => window.location.href = '/voting'}><i className="bi bi-arrow-left me-2"></i>Go to Voting Page</Button>
-                  <Button variant="outline-secondary" onClick={() => window.location.href = '/'}><i className="bi bi-house me-2"></i>Go to Home</Button>
+                  <Button variant="primary" onClick={() => window.location.href = '/voting'}><i className="bi bi-arrow-left me-2"></i>Ir a la Página de Votación</Button>
+                  <Button variant="outline-secondary" onClick={() => window.location.href = '/'}><i className="bi bi-house me-2"></i>Ir al Inicio</Button>
                 </div>
               </div>
             </Card>
@@ -306,28 +304,25 @@ const Admin: React.FC = () => {
 
   return (
     <div className="container">
-      <div className="row">
-        <div className="col-12 mb-4">
-          <h1 className="display-5 fw-bold text-center">Admin Dashboard</h1>
+      <div className="row">        <div className="col-12 mb-4">
+          <h1 className="display-5 fw-bold text-center">Panel de Administración</h1>
           <div className="text-center">
-            <small className="text-muted">Connected as: {account}</small>
-            <span className="badge bg-success ms-2">✅ AUTHORIZED ADMIN</span>
+            <small className="text-muted">Conectado como: {account}</small>
+            <span className="badge bg-success ms-2">✅ ADMINISTRADOR AUTORIZADO</span>
+            {/* <br />
+            <small className="text-muted">{tokenName} ({tokenSymbol}) Balance: {parseFloat(tokenBalance).toFixed(2)}</small> */}
             <br />
-            <small className="text-muted">{tokenName} ({tokenSymbol}) Balance: {parseFloat(tokenBalance).toFixed(2)}</small>
-            <br />
-            <small className="text-muted">SepoliaETH Balance: {parseFloat(adminSepoliaEthBalance).toFixed(4)} ETH</small>
+            <small className="text-muted">Balance SepoliaETH: {parseFloat(adminSepoliaEthBalance).toFixed(4)} ETH</small>
           </div>
         </div>
-      </div>
-
-      {/* Tab Navigation */}
+      </div>      {/* Tab Navigation */}
       <ul className="nav nav-tabs nav-fill mb-4">
         <li className="nav-item">
           <button 
             className={`nav-link ${activeTab === 'elections' ? 'active' : ''}`} 
             onClick={() => setActiveTab('elections')}
           >
-            <i className="bi bi-ui-checks-grid me-2"></i>Elections
+            <i className="bi bi-ui-checks-grid me-2"></i>Elecciones
           </button>
         </li>
         <li className="nav-item">
@@ -335,7 +330,7 @@ const Admin: React.FC = () => {
             className={`nav-link ${activeTab === 'candidates' ? 'active' : ''}`} 
             onClick={() => setActiveTab('candidates')}
           >
-            <i className="bi bi-people-fill me-2"></i>Candidates
+            <i className="bi bi-people-fill me-2"></i>Candidatos
           </button>
         </li>
         <li className="nav-item">
@@ -343,7 +338,7 @@ const Admin: React.FC = () => {
             className={`nav-link ${activeTab === 'tokens' ? 'active' : ''}`} 
             onClick={() => setActiveTab('tokens')}
           >
-            <i className="bi bi-coin me-2"></i>Token Distribution
+            <i className="bi bi-coin me-2"></i>Distribución de Tokens
           </button>
         </li>
         <li className="nav-item">
@@ -351,7 +346,7 @@ const Admin: React.FC = () => {
             className={`nav-link ${activeTab === 'history' ? 'active' : ''}`} 
             onClick={() => setActiveTab('history')}
           >
-            <i className="bi bi-clock-history me-2"></i>Election History
+            <i className="bi bi-clock-history me-2"></i>Historial de Elecciones
           </button>
         </li>
       </ul>
